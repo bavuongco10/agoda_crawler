@@ -7,6 +7,7 @@ def init_writer(
 			'city_name',
 			'hotel_id',
 			'hotel_name',
+			'hotel_review_id',
 			'reviewer_name',
 			'reviewer_country',
 			'rating',
