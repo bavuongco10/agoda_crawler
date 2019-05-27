@@ -5,7 +5,7 @@ import csv
 from time import sleep
 import random
 
-search_location = 'vung tau'
+search_location = 'ho chi minh'
 file_name = 'results_file.csv'
 
 output_file = open(file_name, 'w', encoding='utf8')
