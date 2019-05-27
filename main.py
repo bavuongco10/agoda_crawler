@@ -5,7 +5,6 @@ import get_hotel_details
 import write_csv
 from time import sleep
 import random
-import traceback
 import imp
 
 imp.reload(search_keyword)
@@ -65,7 +64,7 @@ def extract_data_from_hotel(hotel, city_id, city_name):
 
 	output_file.flush()
 	print('===========Commit data to csv===============')
-	sleep(random.randint(1, 5))
+	sleep(random.randint(3, 6))
 
 
 def crawl_data_from_a_search_location(search_location):
@@ -77,13 +76,7 @@ def crawl_data_from_a_search_location(search_location):
 	city_name = hotels_response['CityName']
 	print('============Start crawling city: {0} with {1} hotels ================'.format(city_name, len(hotels)))
 	for hotel_item in hotels:
-		try:
-			extract_data_from_hotel(hotel_item, city_id, city_name)
-		except:
-			traceback.print_exc()
-			sleep(30)
-			extract_data_from_hotel(hotel_item, city_id, city_name)
-		break
+		extract_data_from_hotel(hotel_item, city_id, city_name)
 
 
 search_locations = [
@@ -93,4 +86,5 @@ search_locations = [
 
 for search_location_item in search_locations:
 	crawl_data_from_a_search_location(search_location_item)
+	sleep(20)
 

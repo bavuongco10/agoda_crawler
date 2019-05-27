@@ -3,6 +3,7 @@
 import requests
 from headers_utils import generate_headers
 import write_json
+from time import sleep
 
 url = 'https://www.agoda.com/NewSite/vi-vn/Review/ReviewComments'
 headers = generate_headers()
@@ -38,8 +39,21 @@ def save(data, hotel_id, page=1, page_size=100):
 
 def crawl(hotel_id):
 	params = generate_params(hotel_id)
-	response = requests.post(url, headers=headers, json=params)
-	data = response.json()
-	save(data, hotel_id)
+	try:
+		response = requests.post(url, headers=headers, json=params)
+		data = response.json()
+		save(data, hotel_id)
+		return data
+	except:
+		print('something went wrong=====================================')
+		sleep(30)
+		try:
+			response = requests.post(url, headers=headers, json=params)
+			data = response.json()
+			save(data, hotel_id)
+			return data
+		except:
+			print('Still worng')
+
 
 	return data
