@@ -1,6 +1,10 @@
+#filename code: search_keyword.{location}.json
+
+
 import requests
 from headers_utils import generate_headers
 import toolz
+import write_json
 
 url = 'https://www.agoda.com/Search/Search/GetUnifiedSuggestResult/3/1/1/0/vi-vn/'
 
@@ -22,6 +26,12 @@ def extract_useful_info(data):
 	return toolz.first(data['SuggestionList'])
 
 
+def save(data, search_text):
+	location = search_text.replace(' ', '_')
+	name = f'search_keyword.{location}'
+	write_json.write(data, name)
+
+
 # example response:
 # {'ObjectID': 17190,
 #  'ObjectTypeID': 5,
@@ -34,5 +44,7 @@ def extract_useful_info(data):
 def crawl(search_text):
 	params = generate_params(search_text)
 	response = requests.get(url, headers=headers, params=params)
-	data =  response.json()
+	data = response.json()
+	save(data, search_text)
+
 	return extract_useful_info(data)

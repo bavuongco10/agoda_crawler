@@ -1,14 +1,21 @@
+# filename code: search_hotels.{city_id}.{page_number}.{page_size}.json
+
 import requests
 from headers_utils import generate_headers
 import datetime
+import write_json
 
 url = 'https://www.agoda.com/api/vi-vn/Main/GetSearchResultList'
 
 headers = generate_headers()
 
 
-def generate_params(city_id, page_number):
-	now = datetime.datetime.now().isoformat()
+def generate_params(
+		city_id,
+		page_number=1,
+		page_size=45,
+		now=datetime.datetime.now().isoformat()
+):
 	return {
 		"IsPollDmc": False,
 		"SearchType": 1,
@@ -23,7 +30,7 @@ def generate_params(city_id, page_number):
 		"Longitude": 0,
 		"Radius": 0,
 		"PageNumber": page_number,
-		"PageSize": 45,
+		"PageSize": page_size,
 		"SortOrder": 1,
 		"SortField": 0,
 		"PointsMaxProgramId": 0,
@@ -71,14 +78,21 @@ def generate_params(city_id, page_number):
 	}
 
 
+def save(data, city_id, page_number, page_size):
+	name = f'hotels.{city_id}.{page_number}.{page_size}'
+	write_json.write(data, name)
+
+
 # {
 #   ResultList: [{
 #     EnglishHotelName, CityId, CityName, ReviewScore
 #   }]
 # }
 
-def crawl(city_id, page_number):
-	params = generate_params(city_id, page_number)
+def crawl(city_id, page_number=1, page_size=45):
+	params = generate_params(city_id, page_number, page_size)
 	response = requests.post(url, headers=headers, json=params)
 	data = response.json()
+
+	save(data, city_id, page_number, page_size)
 	return data
