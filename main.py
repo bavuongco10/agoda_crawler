@@ -5,13 +5,15 @@ import get_hotel_details
 import write_csv
 from time import sleep
 import random
-import imp
+import importlib
+import  settings
 
-imp.reload(search_keyword)
-imp.reload(search_hotels)
-imp.reload(get_hotel_details)
-imp.reload(get_comments)
-imp.reload(write_csv)
+importlib.reload(search_keyword)
+importlib.reload(search_hotels)
+importlib.reload(get_hotel_details)
+importlib.reload(get_comments)
+importlib.reload(write_csv)
+importlib.reload(settings)
 
 output_file, writer = write_csv.init_writer()
 
@@ -79,12 +81,8 @@ def crawl_data_from_a_search_location(search_location):
 		extract_data_from_hotel(hotel_item, city_id, city_name)
 
 
-search_locations = [
-	'an giang','vung tau','bac lieu','bac kan','bac giang','bac ninh','ben tre','binh duong','binh dinh','binh phuoc','binh thuan','ca mau','cao bang','can tho','da nang','dak lak','dak nong','dien bien','dong nai','dong thap','gia lai','ha giang','ha nam','ha noi','ha tinh','hai duong','hai phong','hoa binh','ho chi minh','hau giang','hung yen','khanh hoa','kien giang','kon tum','lai chau','lao cai','lang son','lam dong','long an','nam dinh','nghe an','ninh binh','ninh thuan','phu tho','phu yen','quang binh','quang nam','quang ngai','quang ninh','quang tri','soc trang','son la','tay ninh','thai binh','thai nguyen','thanh hoa','thua thien – hue','tien giang','tra vinh','tuyen quang','vinh long','vinh phuc','yen bai'
-]
-
-
-for search_location_item in search_locations:
-	crawl_data_from_a_search_location(search_location_item)
-	sleep(20)
+for search_location_item in settings.locations:
+    print('Search from: ', search_location_item)
+    crawl_data_from_a_search_location(search_location_item)
+    sleep(20)
 
