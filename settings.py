@@ -6,3 +6,19 @@
 
 
 locations = ['vung tau']
+
+comments = {
+  'page': 1,
+  'page_size': 100
+  }
+
+hotels = {
+  'page': 1,
+  'page_size': 45
+  }
+
+result_path = 'result'
+
+result_file = 'results_file.csv'
+
+json_path = 'result/json'
