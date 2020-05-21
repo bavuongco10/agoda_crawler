@@ -9,6 +9,7 @@ import importlib
 import settings
 from utils import add_unique_object_to_array
 import itertools
+from os import path
 
 importlib.reload(search_keyword)
 importlib.reload(search_hotels)
@@ -77,7 +78,13 @@ def extract_data_from_hotel(hotel, city_id, city_name):
     comments = comments + comments_response['comments']
 
   file_name = f'result.{city_id}.{hotel_id}.csv'
-  output_file, writer = write_csv.init_writer(file_name=file_name,file_folder='result/json/results')
+  file_folder = 'result/csv/results'
+
+  if(path.exists(file_folder + '/' + file_name)):
+    print('Hard pass')
+    return
+
+  output_file, writer = write_csv.init_writer(file_name=file_name,file_folder=file_folder)
   for comment_item in comments:
     extract_data_from_comment(writer,comment_item, hotel_id, hotel_name, city_id, city_name)
 
