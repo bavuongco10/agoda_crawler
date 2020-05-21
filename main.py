@@ -83,7 +83,7 @@ def extract_data_from_hotel(hotel, city_id, city_name):
 
   output_file.flush()
   print('===========Commit data to csv===============')
-  sleep(random.randint(2, 5))
+  sleep(random.randint(10, 20))
 
 
 
