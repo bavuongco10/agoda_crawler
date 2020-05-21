@@ -59,6 +59,15 @@ def extract_data_from_comment(writer, comment, hotel_id, hotel_name, city_id, ci
 def extract_data_from_hotel(hotel, city_id, city_name):
   hotel_id = hotel['HotelID']
   hotel_name = hotel['EnglishHotelName']
+
+
+  file_name = f'result.{city_id}.{hotel_id}.csv'
+  file_folder = 'result/csv/results'
+
+  if(path.exists(file_folder + '/' + file_name)):
+    print('Hard pass')
+    return
+
   get_hotel_details.crawl(hotel_id)
 
 
@@ -76,13 +85,6 @@ def extract_data_from_hotel(hotel, city_id, city_name):
       break
 
     comments = comments + comments_response['comments']
-
-  file_name = f'result.{city_id}.{hotel_id}.csv'
-  file_folder = 'result/csv/results'
-
-  if(path.exists(file_folder + '/' + file_name)):
-    print('Hard pass')
-    return
 
   output_file, writer = write_csv.init_writer(file_name=file_name,file_folder=file_folder)
   for comment_item in comments:
