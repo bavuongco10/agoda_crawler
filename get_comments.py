@@ -44,7 +44,7 @@ def get_data(params,hotel_id, page):
   data = response.json()
   data_len = len(data['comments'])
   if(data_len == 0):
-    return False
+    return;
   else:
     save(data, hotel_id, page, data_len)
     return data
