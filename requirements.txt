@@ -1,6 +1,5 @@
 fake_useragent
 requests
-time
 random
 importlib
 datetime
