@@ -1,5 +1,4 @@
 fake_useragent
 requests
-importlib
 datetime
 toolz
