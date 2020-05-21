@@ -6,7 +6,9 @@ import write_csv
 from time import sleep
 import random
 import importlib
-import  settings
+import settings
+from utils import add_unique_object_to_array
+import itertools
 
 importlib.reload(search_keyword)
 importlib.reload(search_hotels)
@@ -26,6 +28,7 @@ def extract_data_from_comment(comment, hotel_id, hotel_name, city_id, city_name)
   rating = comment.get('rating')
   travel_type_name = reviewer_info.get('reviewGroupName')
   room_type_name = reviewer_info.get('roomTypeName')
+  room_type_id = reviewer_info.get('roomTypeId')
   stay_length = reviewer_info.get('lengthOfStay')
   check_in_date = comment.get('checkInDate')
   review_date = comment['reviewDate']
@@ -44,6 +47,7 @@ def extract_data_from_comment(comment, hotel_id, hotel_name, city_id, city_name)
     'rating': rating,
     'travel_type_name': travel_type_name,
     'room_type_name': room_type_name,
+    'room_type_id': room_type_id,
     'stay_length': stay_length,
     'check_in_date': check_in_date,
     'review_date': review_date,
@@ -57,32 +61,66 @@ def extract_data_from_hotel(hotel, city_id, city_name):
   hotel_id = hotel['HotelID']
   hotel_name = hotel['EnglishHotelName']
   get_hotel_details.crawl(hotel_id)
-  comments_response = get_comments.crawl(hotel_id)
-  comments = comments_response['comments']
-
-  print('==============Start crawling hotel:{0} in {1} with {2} comments=============='.format(hotel_name, city_name, len(comments)))
-  for comment_item in comments:
-    extract_data_from_comment(comment_item, hotel_id, hotel_name, city_id, city_name)
-
-  output_file.flush()
-  print('===========Commit data to csv===============')
-  sleep(random.randint(3, 6))
 
 
-def crawl_data_from_a_search_location(search_location):
-  location_response = search_keyword.crawl(search_location)
+  current_comments_page = 1
+  comments_page_size = settings.comments['page_size']
+  stop_flag = False
+
+  while stop_flag == False:
+    comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size)
+    current_comments_page += 1
+
+    if (comments_response == False):
+      stop_flag = True
+      break
+
+    comments = comments_response['comments']
+
+    print('=Start crawling hotel:{0} in {1} with {2} comments=='.format(hotel_name, city_name, len(comments)))
+    for comment_item in comments:
+      extract_data_from_comment(comment_item, hotel_id, hotel_name, city_id, city_name)
+
+    output_file.flush()
+    print('===========Commit data to csv===============')
+    sleep(random.randint(2, 5))
+
+
+
+def crawl_hotels_location(city_id):
+  # Init total_pages is 1 to force it to fetch the first page and fetch actual total pages
+  total_pages = 1
+  hotels = []
+  current_hotel_page = 1
+  while current_hotel_page <= total_pages:
+    hotel_page_size=settings.hotels['page_size']
+    hotels_response = search_hotels.crawl(city_id, current_hotel_page, hotel_page_size)
+    current_hotels = hotels_response['ResultList']
+    total_pages = int(hotels_response['Pagination']['TotalPageNumber'])
+    hotels = add_unique_object_to_array(hotels, current_hotels, 'HotelID')
+
+    current_hotel_page += 1
+  return hotels
+
+
+cities = {}
+
+for location_name in settings.locations:
+  print('Search from: ', location_name)
+
+  #  Get LocationId from name
+  location_response = search_keyword.crawl(location_name)
   city_id = location_response['ObjectID']
+  city_name = location_response['Name']
+  hotels_by_location = crawl_hotels_location(city_id)
+  cities[city_id] = {
+    'name': city_name,
+    'hotels': hotels_by_location
+    }
 
-  hotels_response = search_hotels.crawl(city_id)
-  hotels = hotels_response['ResultList']
-  city_name = hotels_response['CityName']
-  print('============Start crawling city: {0} with {1} hotels ================'.format(city_name, len(hotels)))
-  for hotel_item in hotels:
-    extract_data_from_hotel(hotel_item, city_id, city_name)
 
+  hotels = list(itertools.chain.from_iterable([values['hotels'] for attr, values in cities.items()]))
 
-for search_location_item in settings.locations:
-  print('Search from: ', search_location_item)
-  crawl_data_from_a_search_location(search_location_item)
-  sleep(20)
-
+  print('=====Start crawling city: {0} with {1} hotel======'.format(city_name, len(cities[city_id])))
+  for hotel in hotels:
+    extract_data_from_hotel(hotel, city_id, city_name)

@@ -5,6 +5,7 @@ import requests
 from headers_utils import generate_headers
 import toolz
 import write_json
+import settings
 
 url = 'https://www.agoda.com/Search/Search/GetUnifiedSuggestResult/3/1/1/0/vi-vn/'
 
@@ -29,7 +30,7 @@ def extract_useful_info(data):
 def save(data, search_text):
 	location = search_text.replace(' ', '_')
 	name = f'search_keyword.{location}'
-	write_json.write(data, name)
+	write_json.write(data, name, settings.keywords_path)
 
 
 # example response:

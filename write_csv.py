@@ -14,6 +14,7 @@ def init_writer(
 			'rating',
 			'travel_type_name',
 			'room_type_name',
+      'room_type_id',
 			'stay_length',
 			'check_in_date',
 			'review_date',

@@ -81,7 +81,7 @@ def generate_params(
 
 def save(data, city_id, page_number, page_size):
   name = f'hotels.{city_id}.{page_number}.{page_size}'
-  write_json.write(data, name)
+  write_json.write(data, name, file_folder=settings.hotels_path)
 
 
 # {
@@ -94,6 +94,6 @@ def crawl(city_id, page_number=settings.hotels['page'], page_size=settings.hotel
   params = generate_params(city_id, page_number, page_size)
   response = requests.post(url, headers=headers, json=params)
   data = response.json()
-
-  save(data, city_id, page_number, page_size)
+  data_len = len(data['ResultList'])
+  save(data, city_id, page_number, data_len)
   return data

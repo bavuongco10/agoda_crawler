@@ -5,6 +5,7 @@ from headers_utils import generate_headers
 import write_json
 from time import sleep
 import settings
+import time
 
 url = 'https://www.agoda.com/NewSite/vi-vn/Review/ReviewComments'
 headers = generate_headers()
@@ -27,7 +28,7 @@ def generate_params(hotel_id, page, page_size):
 
 def save(data, hotel_id, page, page_size):
   name = f'comments.{hotel_id}.{page}.{page_size}'
-  write_json.write(data, name)
+  write_json.write(data, name, settings.comments_path)
 
 
 # {
@@ -38,26 +39,30 @@ def save(data, hotel_id, page, page_size):
 # }
 
 
-def crawl(hotel_id):
-  page = settings.comments['page']
-  page_size = settings.comments['page_size']
+def get_data(params,hotel_id, page):
+  response = requests.post(url, headers=headers, json=params)
+  data = response.json()
+  data_len = len(data['comments'])
+  if(data_len == 0):
+    return False
+  else:
+    save(data, hotel_id, page, data_len)
+    return data
 
+
+def crawl(hotel_id, page, page_size):
   params = generate_params(hotel_id, page, page_size)
   try:
-    response = requests.post(url, headers=headers, json=params)
-    data = response.json()
-    save(data, hotel_id, page, page_size)
+    data = get_data(params, hotel_id, page)
     return data
   except:
-    print('something went wrong=====================================')
+    print('==========something went wrong============')
     sleep(30)
     try:
-      response = requests.post(url, headers=headers, json=params)
-      data = response.json()
-      save(data, hotel_id)
+      data = get_data(params, hotel_id, page)
       return data
     except:
-      print('Still worng')
+      print('Still wrong')
 
 
   return data

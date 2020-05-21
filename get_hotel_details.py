@@ -3,6 +3,7 @@
 import requests
 from headers_utils import generate_headers
 import write_json
+import settings
 
 url = 'https://www.agoda.com/api/vi-vn/Hotel/AboutHotel'
 headers = generate_headers()
@@ -19,7 +20,7 @@ def generate_params(hotel_id):
 
 def save(data, hotel_id):
 	name = f'hotel.{hotel_id}'
-	write_json.write(data, name)
+	write_json.write(data, name, settings.hotels_path)
 
 
 def crawl(hotel_id):
