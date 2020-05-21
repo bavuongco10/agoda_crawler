@@ -52,17 +52,19 @@ def get_data(params,hotel_id, page):
 
 def crawl(hotel_id, page, page_size):
   params = generate_params(hotel_id, page, page_size)
-  try:
-    data = get_data(params, hotel_id, page)
-    return data
-  except:
-    print('==========something went wrong============')
-    sleep(30)
+  max_retries = 4
+
+  data = None
+
+  for try_time in range(max_retries):
     try:
       data = get_data(params, hotel_id, page)
-      return data
+      break
     except:
-      print('Still wrong')
+      print('==========something went wrong============')
+      sleep((30 * ( try_time + 1) ))
+      continue
+
 
 
   return data
