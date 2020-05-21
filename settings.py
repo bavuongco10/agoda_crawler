@@ -5,7 +5,7 @@ all_locations = [
 ]
 
 
-locations = all_locations[0:2]
+locations = all_locations
 
 comments = {
   'page': 1,

@@ -113,6 +113,7 @@ for location_name in settings.locations:
   city_id = location_response['ObjectID']
   city_name = location_response['Name']
   hotels_by_location = crawl_hotels_location(city_id)
+
   cities[city_id] = {
     'name': city_name,
     'hotels': hotels_by_location
@@ -121,6 +122,13 @@ for location_name in settings.locations:
 
   hotels = list(itertools.chain.from_iterable([values['hotels'] for attr, values in cities.items()]))
 
+
+
   print('=====Start crawling city: {0} with {1} hotel======'.format(city_name, len(cities[city_id])))
   for hotel in hotels:
     extract_data_from_hotel(hotel, city_id, city_name)
+
+
+
+
+
