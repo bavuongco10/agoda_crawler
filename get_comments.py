@@ -51,7 +51,7 @@ def get_data(params,hotel_id, page):
 
 
 def crawl(hotel_id, page, page_size):
-  max_retries = 4
+  max_retries = 2
 
   data = None
 

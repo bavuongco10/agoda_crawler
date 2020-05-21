@@ -70,20 +70,21 @@ def extract_data_from_hotel(hotel, city_id, city_name):
     comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size)
     current_comments_page += 1
 
-    if (comments_response == False):
+    if (comments_response is None):
       stop_flag = True
       break
 
     comments = comments + comments_response['comments']
 
-  file_name = f'result.{city_id}.{hotel_id}.json'
+  file_name = f'result.{city_id}.{hotel_id}.csv'
   output_file, writer = write_csv.init_writer(file_name=file_name,file_folder='result/json/results')
   for comment_item in comments:
     extract_data_from_comment(writer,comment_item, hotel_id, hotel_name, city_id, city_name)
 
+  print('===save csv: ', city_name, hotel_name)
   output_file.flush()
   print('===========Commit data to csv===============')
-  sleep(random.randint(10, 20))
+  sleep(random.randint(2, 5))
 
 
 
