@@ -17,10 +17,8 @@ importlib.reload(get_comments)
 importlib.reload(write_csv)
 importlib.reload(settings)
 
-output_file, writer = write_csv.init_writer()
 
-
-def extract_data_from_comment(comment, hotel_id, hotel_name, city_id, city_name):
+def extract_data_from_comment(writer, comment, hotel_id, hotel_name, city_id, city_name):
   reviewer_info = comment.get('reviewerInfo', {})
   reviewer_name = reviewer_info.get('displayMemberName')
   reviewer_country = reviewer_info.get('flagName')
@@ -67,6 +65,7 @@ def extract_data_from_hotel(hotel, city_id, city_name):
   comments_page_size = settings.comments['page_size']
   stop_flag = False
 
+  comments = []
   while stop_flag == False:
     comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size)
     current_comments_page += 1
@@ -75,15 +74,16 @@ def extract_data_from_hotel(hotel, city_id, city_name):
       stop_flag = True
       break
 
-    comments = comments_response['comments']
+    comments = comments + comments_response['comments']
 
-    print('=Start crawling hotel:{0} in {1} with {2} comments=='.format(hotel_name, city_name, len(comments)))
-    for comment_item in comments:
-      extract_data_from_comment(comment_item, hotel_id, hotel_name, city_id, city_name)
+  file_name = f'result.{city_id}.{hotel_id}.json'
+  output_file, writer = write_csv.init_writer(file_name=file_name,file_folder='result/json/results')
+  for comment_item in comments:
+    extract_data_from_comment(writer,comment_item, hotel_id, hotel_name, city_id, city_name)
 
-    output_file.flush()
-    print('===========Commit data to csv===============')
-    sleep(random.randint(2, 5))
+  output_file.flush()
+  print('===========Commit data to csv===============')
+  sleep(random.randint(2, 5))
 
 
 
