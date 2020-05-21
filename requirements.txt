@@ -1,7 +1,5 @@
 fake_useragent
 requests
-random
 importlib
 datetime
 toolz
-itertools
