@@ -71,9 +71,8 @@ def crawl(hotel_id, page, page_size, city_id):
       print(e)
       sleep(30)
       print('==Trigger dummy request====');
-      dymmy_res = search_hotels.crawl(city_id, 1, 25)
-      dymmy_data = dymmy_res.json()
-      print('dummy: ', len(dymmy_data['ResultList']))
+      dymmy_data = search_hotels.crawl(city_id, 1, 25)
+      print('dummy: ', len(dymmy_data))
       sleep(30)
       continue
 
