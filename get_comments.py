@@ -6,7 +6,7 @@ import write_json
 from time import sleep
 import settings
 import time
-import get_hotel_details
+import search_hotels
 
 url = 'https://www.agoda.com/NewSite/vi-vn/Review/ReviewComments'
 headers = generate_headers()
@@ -51,7 +51,7 @@ def get_data(params,hotel_id, page):
     return data
 
 
-def crawl(hotel_id, page, page_size):
+def crawl(hotel_id, page, page_size, city_id):
   max_retries = 2
 
   data = None
@@ -69,7 +69,9 @@ def crawl(hotel_id, page, page_size):
       print('==========something went wrong============')
       print(e)
       if(try_time + 1 < max_retries): sleep(30)
-      get_hotel_details.crawl(hotel_id)
+
+      print('==Trigger dummy request====');
+      search_hotels.crawl(city_id, 1, 20)
       sleep(5)
       have_error = True
       continue
