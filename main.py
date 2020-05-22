@@ -78,7 +78,7 @@ def extract_data_from_hotel(hotel, city_id, city_name):
   comments = []
   have_error = False
   while stop_flag == False:
-    comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size)
+    comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size, city_id)
     current_comments_page += 1
 
     if comments_response == 'error':
