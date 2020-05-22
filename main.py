@@ -76,17 +76,22 @@ def extract_data_from_hotel(hotel, city_id, city_name):
   stop_flag = False
 
   comments = []
+  have_error = False
   while stop_flag == False:
     comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size)
     current_comments_page += 1
 
-    if (comments_response is None):
+    if comments_response == 'error':
+      have_error = True
+      break
+
+    if comments_response is None:
       stop_flag = True
       break
 
     comments = comments + comments_response['comments']
 
-  if not comments:
+  if have_error or not comments:
     print('====Save nothing========', city_name, hotel_name)
     return
 
