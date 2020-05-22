@@ -63,7 +63,8 @@ def crawl(hotel_id, page, page_size):
     except Exception as e:
       print('==========something went wrong============')
       print(e)
-      if(try_time + 1 < max_retries): sleep((30 * ( try_time + 1) ))
+      if(try_time + 1 < max_retries): sleep(30)
+      requests.get('https://www.agoda.com/api/vi-vn/culture/getlanguages?origin=VN&languageId=24&pagetypeId=1')
       continue
 
 
