@@ -67,13 +67,14 @@ def crawl(hotel_id, page, page_size, city_id):
       break
     except Exception as e:
       print('==========something went wrong============')
-      print(e)
-      if(try_time + 1 < max_retries): sleep(30)
-
-      print('==Trigger dummy request====');
-      search_hotels.crawl(city_id, 1, 20)
-      sleep(5)
       have_error = True
+      print(e)
+      sleep(30)
+      print('==Trigger dummy request====');
+      dymmy_res = search_hotels.crawl(city_id, 1, 25)
+      dymmy_data = dymmy_res.json()
+      print('dummy: ', len(dymmy_data['ResultList']))
+      sleep(30)
       continue
 
 
