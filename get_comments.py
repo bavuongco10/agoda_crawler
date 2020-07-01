@@ -3,10 +3,9 @@
 import requests
 from headers_utils import generate_headers
 import write_json
-from time import sleep
 import settings
-import time
-import search_hotels
+import tor_proxy
+from os import path,makedirs
 
 url = 'https://www.agoda.com/NewSite/vi-vn/Review/ReviewComments'
 headers = generate_headers()
@@ -40,44 +39,81 @@ def save(data, hotel_id, page, page_size):
 # }
 
 
-def get_data(params,hotel_id, page):
-  response = requests.post(url, headers=headers, json=params)
-  data = response.json()
-  data_len = len(data['comments'])
-  if(data_len == 0):
-    return;
-  else:
-    save(data, hotel_id, page, data_len)
-    return data
+# def crawl(hotel_id, page, page_size, city_id):
+#   max_retries = 2
+
+#   data = None
+
+#   have_error = False
+
+#   for try_time in range(max_retries):
+#     try:
+#       params = generate_params(hotel_id, page, page_size)
+#       response = requests.post(url, headers=headers, json=params, proxies=tor_proxy.proxies)
+#       data = response.json()
+
+#       data_len = len(data['comments'])
+
+#       if(data_len != 0):
+#         save(data, hotel_id, page, data_len)
+
+#       have_error = False
+#       break
+#     except Exception as e:
+#       print('==========something went wrong============')
+#       print(e)
+#       print(response.json())
+#       have_error = True
+#       tor_proxy.respawn_new_proxy()
+#       sleep(10)
+#       continue
+
+
+#   if have_error:
+#     return 'error'
+#   else:
+#     return data
+
+
+def write(data, file_name, file_folder):
+  if not path.exists(file_folder): makedirs(file_folder)
+
+  file_path = path.join(file_folder, file_name) + '.txt'
+  output_file = open(file_path, 'w', encoding="utf-8")
+  output_file.write(data)
+  output_file.close()
+  print(f'Saved {file_path}')
+  return file_path
 
 
 def crawl(hotel_id, page, page_size, city_id):
-  max_retries = 2
-
+  tor_proxy.respawn_new_proxy()
   data = None
-
   have_error = False
 
-  for try_time in range(max_retries):
-    try:
-      params = generate_params(hotel_id, page, page_size)
-      data = get_data(params, hotel_id, page)
+  try:
+    params = generate_params(hotel_id, page, page_size)
+    response = requests.post(url, headers=headers, json=params, proxies=tor_proxy.proxies)
+    data = response.json()
+    data_len = len(data['comments'])
 
-      have_error = False
-      break
-    except Exception as e:
-      print('==========something went wrong============')
-      have_error = True
-      print(e)
-      sleep(30)
-      print('==Trigger dummy request====');
-      dymmy_data = search_hotels.crawl(city_id, 1, 25)
-      print('dummy: ', len(dymmy_data))
-      sleep(30)
-      continue
+    if(data_len != 0):
+      save(data, hotel_id, page, data_len)
+    else:
+      return
+
+  except:
+    print('==========something went wrong============')
+    print(response.status_code)
+    name = f'comments.{hotel_id}.{page}.{page_size}'
+    print('write error')
+    write(response.text, name, 'result/error/html')
+    have_error = True
 
 
   if have_error:
-    return 'error'
+    raise Exception('Cannot fetch comments')
   else:
     return data
+
+

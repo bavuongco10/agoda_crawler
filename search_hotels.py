@@ -5,6 +5,8 @@ from headers_utils import generate_headers
 import datetime
 import write_json
 import settings
+import tor_proxy
+from time import sleep
 
 url = 'https://www.agoda.com/api/vi-vn/Main/GetSearchResultList'
 
@@ -91,9 +93,31 @@ def save(data, city_id, page_number, page_size):
 # }
 
 def crawl(city_id, page_number=settings.hotels['page'], page_size=settings.hotels['page_size']):
+  max_retries = 2
+  have_error = False
+  data = None
   params = generate_params(city_id, page_number, page_size)
-  response = requests.post(url, headers=headers, json=params)
-  data = response.json()
-  data_len = len(data['ResultList'])
-  save(data, city_id, page_number, data_len)
-  return data
+
+  for try_time in range(max_retries):
+    try:
+      response = requests.post(url, headers=headers, json=params, proxies=tor_proxy.proxies)
+      data = response.json()
+      data_len = len(data['ResultList'])
+      save(data, city_id, page_number, data_len)
+
+      have_error = False
+      break
+    except Exception as e:
+      print('==========something went wrong============')
+      print(e)
+      print(response.json())
+      have_error = True
+      tor_proxy.respawn_new_proxy()
+      sleep(10)
+      continue
+
+  if have_error:
+    raise Exception('Can not fetch hotels data')
+  else:
+    return data
+

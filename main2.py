@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun 30 21:00:17 2020
+
+@author: user
+"""
+
+from peewee import *
+import importlib
 import search_keyword
 import search_hotels
 import get_comments
@@ -5,11 +15,9 @@ import get_hotel_details
 import write_csv
 from time import sleep
 import random
-import importlib
 import settings
-from utils import add_unique_object_to_array
-import itertools
 from os import path
+import random
 
 importlib.reload(search_keyword)
 importlib.reload(search_hotels)
@@ -19,7 +27,47 @@ importlib.reload(write_csv)
 importlib.reload(settings)
 
 
-def extract_data_from_comment(writer, comment, hotel_id, hotel_name, city_id, city_name):
+db = SqliteDatabase('agoda.db')
+db.connect()
+
+class BaseModel(Model):
+  class Meta:
+    database = db
+
+class Hotel(BaseModel):
+  HotelID = BigIntegerField(primary_key=True, unique=True)
+  EnglishHotelName = CharField()
+  CityID = BigIntegerField()
+  FetchedAllComments = BooleanField(default=False)
+
+
+class City(BaseModel):
+  ObjectID = BigIntegerField(primary_key=True, unique=True)
+  Name = CharField()
+  FetchedAllHotels = BooleanField(default=False)
+
+class Comment(BaseModel):
+  city_id = CharField(),
+  city_name = CharField(),
+  hotel_id = CharField(),
+  hotel_name = CharField(),
+  hotel_review_id = CharField(),
+  reviewer_name = CharField(),
+  reviewer_country = CharField(),
+  rating= CharField(),
+  travel_type_name = CharField(),
+  room_type_name = CharField(),
+  room_type_id = CharField(),
+  stay_length = CharField()
+  check_in_date = CharField(),
+  review_date = CharField(),
+  rating_text = TextField(),
+  review_comments = TextField(),
+  comment_language = CharField()
+
+db.create_tables([City, Hotel, Comment])
+
+def extract_data_from_comment(comment, hotel_id, hotel_name, city_id, city_name):
   reviewer_info = comment.get('reviewerInfo', {})
   reviewer_name = reviewer_info.get('displayMemberName')
   reviewer_country = reviewer_info.get('flagName')
@@ -35,7 +83,7 @@ def extract_data_from_comment(writer, comment, hotel_id, hotel_name, city_id, ci
   review_comments = comment['reviewComments']
   comment_language = comment.get('translateSource')
 
-  writer.writerow({
+  return {
     'city_id': city_id,
     'city_name': city_name,
     'hotel_id': hotel_id,
@@ -53,38 +101,34 @@ def extract_data_from_comment(writer, comment, hotel_id, hotel_name, city_id, ci
     'rating_text': rating_text,
     'review_comments': review_comments,
     'comment_language': comment_language
-  })
+  }
 
 
-def extract_data_from_hotel(hotel, city_id, city_name):
-  hotel_id = hotel['HotelID']
-  hotel_name = hotel['EnglishHotelName']
+hotels = Hotel.select().where(Hotel.FetchedAllComments == False).order_by(fn.Random())
 
+for hotel in hotels:
+  hotel_id = hotel.HotelID
+  city_id = hotel.CityID
+  hotel_name = hotel.EnglishHotelName
+  city_name = City.get(City.ObjectID == city_id).Name
+  current_comments_page = 1
+  comments_page_size = settings.comments['page_size']
+  comments = []
+  stop_flag = False
 
   file_name = f'result.{city_id}.{hotel_id}.csv'
   file_folder = 'result/csv/results'
 
   if(path.exists(file_folder + '/' + file_name)):
     print('Hard pass')
-    return
+    Hotel.update(FetchedAllComments=True).where(Hotel.HotelID==hotel_id).execute()
+    break
 
-  get_hotel_details.crawl(hotel_id)
-
-
-  current_comments_page = 1
-  comments_page_size = settings.comments['page_size']
-  stop_flag = False
-
-  comments = []
-  have_error = False
   while stop_flag == False:
     print('crawl comment on: ',city_id,current_comments_page, comments_page_size)
     comments_response = get_comments.crawl(hotel_id, current_comments_page, comments_page_size, city_id)
     current_comments_page += 1
 
-    if comments_response == 'error':
-      have_error = True
-      break
 
     if comments_response is None:
       stop_flag = True
@@ -92,63 +136,14 @@ def extract_data_from_hotel(hotel, city_id, city_name):
 
     comments = comments + comments_response['comments']
 
-  if have_error or not comments:
-    print('====Save nothing========', city_name, hotel_name)
-    return
 
   output_file, writer = write_csv.init_writer(file_name=file_name,file_folder=file_folder)
   for comment_item in comments:
-    extract_data_from_comment(writer,comment_item, hotel_id, hotel_name, city_id, city_name)
+    row = extract_data_from_comment(comment_item, hotel_id, hotel_name, city_id, city_name)
+    writer.writerow(row)
 
   print('===save csv: ', city_name, hotel_name)
   output_file.flush()
   print('===========Commit data to csv===============')
+  Hotel.update(FetchedAllComments=True).where(Hotel.HotelID==hotel_id).execute()
   sleep(random.randint(2, 5))
-
-
-
-def crawl_hotels_location(city_id):
-  # Init total_pages is 1 to force it to fetch the first page and fetch actual total pages
-  total_pages = 1
-  hotels = []
-  current_hotel_page = 1
-  while current_hotel_page <= total_pages:
-    hotel_page_size=settings.hotels['page_size']
-    hotels_response = search_hotels.crawl(city_id, current_hotel_page, hotel_page_size)
-    current_hotels = hotels_response['ResultList']
-    total_pages = int(hotels_response['Pagination']['TotalPageNumber'])
-    hotels = add_unique_object_to_array(hotels, current_hotels, 'HotelID')
-
-    current_hotel_page += 1
-  return hotels
-
-
-cities = {}
-
-for location_name in settings.locations:
-  print('Search from: ', location_name)
-
-  #  Get LocationId from name
-  location_response = search_keyword.crawl(location_name)
-  city_id = location_response['ObjectID']
-  city_name = location_response['Name']
-  hotels_by_location = crawl_hotels_location(city_id)
-
-  cities[city_id] = {
-    'name': city_name,
-    'hotels': hotels_by_location
-    }
-
-
-  hotels = list(itertools.chain.from_iterable([values['hotels'] for attr, values in cities.items()]))
-
-
-
-  print('=====Start crawling city: {0} with {1} hotel======'.format(city_name, len(cities[city_id])))
-  for hotel in hotels:
-    extract_data_from_hotel(hotel, city_id, city_name)
-
-
-
-
-
